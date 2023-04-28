@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Extractor</title>
+</head>
+<body>
+    <h1>CSV Extractor</h1>
+    <input type="file" id="csv-file" accept=".csv,.txt">
+    <button id="process-csv">Process CSV</button>
+    <a id="download-link" href="#" download="extracted_data.csv" style="display: none;">Download Extracted Data</a>
+
+    <script>
+        function findHeaderStart(csvData) {
+            for (let index = 0; index < csvData.length; index++) {
+                if (csvData[index][0].trim() === "No.") {
+                    return index;
+                }
+            }
+            return -1;
+        }
+
+        function findDataEnd(csvData, start) {
+            for (let index = start; index < csvData.length; index++) {
+                if (!csvData[index].join('').trim()) {
+                    return index;
+                }
+            }
+            return csvData.length;
+        }
+
+        function processCSV() {
+            const csvFileInput = document.getElementById("csv-file");
+            const file = csvFileInput.files[0];
+            if (!file) {
+                alert("No file selected");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const csvData = event.target.result.split("\n").map(row => row.split(","));
+                const headerStart = findHeaderStart(csvData);
+                const dataEnd = findDataEnd(csvData, headerStart + 2);
+                const extractedData = csvData.slice(headerStart, dataEnd).map(row => row.join(",")).join("\n");
+
+                const downloadLink = document.getElementById("download-link");
+                downloadLink.href = URL.createObjectURL(new Blob([extractedData], {type: "text/csv"}));
+                downloadLink.style.display = "block";
+            };
+            reader.readAsText(file);
+        }
+
+        document.getElementById("process-csv").addEventListener("click", processCSV);
+    </script>
+</body>
+</html>
